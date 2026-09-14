@@ -217,7 +217,6 @@
         getNowTime();
         checkUrlParams();
         
-        // 預設塞入一筆測試資料
         if (bossList.length === 0) {
             bossList.push({
                 name: "紅寶王(預設測試)",
@@ -228,9 +227,9 @@
         }
         updateTable();
 
-        // 綁定事件監聽器（排除古老 onclick 機制，100% 穩定）
+        // 綁定事件監聽器
         document.getElementById('testBtn').addEventListener('click', function() {
-            alert('🎉 測試成功！所有按鈕功能已完全修復通電！');
+            alert('🎉 測試成功！全功能已徹底激活，可以正常打王新增了！');
         });
         document.getElementById('nowTimeBtn').addEventListener('click', getNowTime);
         document.getElementById('addTimerBtn').addEventListener('click', addTimer);
@@ -287,3 +286,4 @@
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand("copy");
+            document.body.removeChild(tempInput);
