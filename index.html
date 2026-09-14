@@ -208,7 +208,8 @@
 </div>
 
 <script>
-    var bossList = [
+    // 讀取本地儲存的資料，若無則建立預設資料
+    var bossList = JSON.parse(localStorage.getItem('ms_boss_timers')) || [
         {
             name: "紅寶王(預設測試)",
             ch: 1,
@@ -221,8 +222,10 @@
         getNowTime();
     }, 50);
 
+    // 每秒檢查是否該進入下一輪自動循環計時
     setInterval(function() {
         var nowTimestamp = new Date().getTime();
+        var isChanged = false;
         
         for (var i = 0; i < bossList.length; i++) {
             var item = bossList[i];
@@ -232,70 +235,55 @@
             while (nowTimestamp >= respawnTimestamp) {
                 item.killTimestamp = respawnTimestamp;
                 respawnTimestamp = item.killTimestamp + cdMs;
+                isChanged = true;
             }
         }
+        if (isChanged) saveToStorage();
         updateTable();
     }, 1000);
 
+    // 控制下拉選單切換自訂項目
     function onBossSelect() {
         var bossSel = document.getElementById('bossName').value;
         var cdInput = document.getElementById('bossCd');
         var customBlock = document.getElementById('customBossBlock');
         
-        if (bossSel === '紅寶王' || bossSel === '蜈蚣王') {
-            cdInput.value = 45;
-            customBlock.style.display = 'none';
+        if (bossSel === "自訂王") {
+            customBlock.style.display = "block";
+            cdInput.value = 60;
         } else {
-            customBlock.style.display = 'block';
+            customBlock.style.display = "none";
+            cdInput.value = 45;
         }
     }
 
+    // 取得現在時間並自動填入時間控制欄位
     function getNowTime() {
         var now = new Date();
-        var hrs = now.getHours();
-        var mins = now.getMinutes();
-        if (hrs < 10) hrs = "0" + hrs;
-        if (mins < 10) mins = "0" + mins;
-        var inputEl = document.getElementById('killTimeInput');
-        if (inputEl) {
-            inputEl.value = hrs + ":" + mins;
-        }
+        var hours = String(now.getHours()).padStart(2, '0');
+        var minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('killTimeInput').value = hours + ':' + minutes;
     }
 
+    // 新增一筆計時器
     function addTimer() {
         var bossSel = document.getElementById('bossName').value;
-        var finalName = bossSel;
-        if (bossSel === '自訂王') {
-            finalName = document.getElementById('customBossName').value.trim();
-        }
-        
-        var chNum = parseInt(document.getElementById('bossCh').value, 10);
-        var cdNum = parseInt(document.getElementById('bossCd').value, 10);
+        var finalName = (bossSel === "自訂王") ? document.getElementById('customBossName').value.trim() : bossSel;
+        var ch = parseInt(document.getElementById('bossCh').value) || 1;
+        var cd = parseInt(document.getElementById('bossCd').value) || 45;
         var timeStr = document.getElementById('killTimeInput').value;
 
-        if (!finalName || isNaN(chNum) || isNaN(cdNum) || !timeStr) {
-            alert('請填寫完整的欄位！');
-            return;
-        }
+        if (!finalName) { alert("請輸入 BOSS 名稱！"); return; }
+        if (ch < 1 || ch > 60) { alert("頻道只限 1 ~ 60 分流！"); return; }
 
-        var tParts = timeStr.split(':');
-        var kDate = new Date();
-        // 修正處：確實補上 [0] 與 [1] 陣列索引，徹底修復斷電死機 Bug
-        kDate.setHours(parseInt(tParts[0], 10), parseInt(tParts[1], 10), 0, 0);
-
-        for (var i = bossList.length - 1; i >= 0; i--) {
-            if (bossList[i].name === finalName && bossList[i].ch === chNum) {
-                bossList.splice(i, 1);
+        var targetDate = new Date();
+        if (timeStr) {
+            var parts = timeStr.split(':');
+            targetDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+            if (targetDate.getTime() > new Date().getTime()) {
+                targetDate.setDate(targetDate.getDate() - 1);
             }
         }
 
-        bossList.push({
-            name: finalName,
-            ch: chNum,
-            cd: cdNum,
-            killTimestamp: kDate.getTime()
-        });
-
-        updateTable();
-    }
-
+        var existIndex = bossList.findIndex(item => item.name === finalName && item.ch === ch);
+        var timerObj = {
