@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍁 楓之谷 60頻道小隊【即時連線】計時器</title>
-    <!-- 引入 Firebase 核心與資料庫 SDK -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
+    <title>🍁 楓之谷 60頻道團隊共享計時器 (終極穩定歷史版)</title>
     <style>
         :root {
             --primary: #ff9f43;
@@ -64,7 +61,7 @@
             margin-bottom: 5px;
             color: #b2bec3;
         }
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px;
             background-color: #2f3542;
@@ -73,6 +70,12 @@
             color: #ffffff;
             box-sizing: border-box;
             font-size: 1rem;
+        }
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
         }
         button {
             background-color: var(--primary);
@@ -129,35 +132,18 @@
             border-radius: 6px;
             margin-top: 8px;
         }
-        .connection-status {
-            text-align: center;
-            padding: 8px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            font-weight: bold;
-        }
-        .status-online { background-color: rgba(29, 209, 161, 0.2); color: var(--success); }
-        .status-offline { background-color: rgba(255, 107, 107, 0.2); color: var(--danger); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="connStatus" class="connection-status status-offline">📡 正在連接公共雲端資料庫...</div>
+    <button type="button" class="btn-secondary" style="margin-bottom: 15px; background-color: #10ac84;" onclick="alert('🎉 網頁架構一切正常！按鈕全面復活！')">🔍 點我測試按鈕是否復活</button>
 
-    <h1>🍁 楓之谷 60頻道【即時連線】計時器</h1>
+    <h1>🍁 楓之谷 60頻道團隊共享計時器</h1>
 
     <div class="grid">
         <div class="sidebar">
             <div class="card form-group">
-                <h2>🔑 小隊專屬密碼房間</h2>
-                <div class="form-group">
-                    <label>房間代號 (與隊友輸入相同英數即可共同連線)</label>
-                    <input type="text" id="roomName" value="maple_team_999" onchange="switchRoom()">
-                </div>
-            </div>
-
-            <div class="card form-group" style="margin-top: 20px;">
                 <h2>⚔️ 新增 / 更新擊殺紀錄</h2>
                 <div class="form-group">
                     <label>BOSS 名稱</label>
@@ -180,7 +166,7 @@
                     <input type="number" id="bossCd" value="45" min="1">
                 </div>
                 <div class="form-group">
-                    <label>⏱️ 擊殺時間調整</label>
+                    <label>⏱️ 擊殺時間點調整</label>
                     <button type="button" style="margin-bottom:8px;" onclick="getNowTime()">⚡ 就是現在 (帶入當下電腦時間)</button>
                     <div class="time-adjust-panel">
                         <label style="font-size:0.85rem;">手動指定時間 (時:分)：</label>
@@ -188,13 +174,28 @@
                     </div>
                 </div>
                 <button type="button" style="background-color: #ff9f43;" onclick="addTimer()">➕ 紀錄 / 加入無限倒數王表</button>
-                <button type="button" class="btn-danger" style="margin-top:15px; padding:8px; font-size:0.9rem;" onclick="clearAll()">⚠️ 清空本房所有紀錄</button>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h2>👥 團隊代碼與快速備份選單</h2>
+                <div class="form-group">
+                    <label>💾 讀取歷史備份 (免去 Discord 重新複製)</label>
+                    <select id="historySelect" onchange="loadHistoryBackup()">
+                        <option value="">-- 點擊展開選擇歷史紀錄 --</option>
+                    </select>
+                </div>
+                <textarea id="syncCode" rows="3" placeholder="團隊同步代碼會自動顯示於此..."></textarea>
+                <div class="btn-group">
+                    <button type="button" class="btn-secondary" onclick="exportData()">📋 複製我的代碼</button>
+                    <button type="button" onclick="importData()">📥 匯入新代碼</button>
+                </div>
+                <button type="button" class="btn-danger" style="margin-top:10px; padding:8px; font-size:0.9rem;" onclick="clearAll()">⚠️ 清空目前所有紀錄</button>
             </div>
         </div>
 
         <div class="main-content">
             <div class="card" style="height: 100%; overflow-x: auto;">
-                <h2>📅 【即時同步】追王面板 (全隊畫面即時同步)</h2>
+                <h2>📅 目前追王時間面板 (時間到自動跳下一輪)</h2>
                 <table>
                     <thead>
                         <tr>
@@ -216,52 +217,38 @@
 </div>
 
 <script>
-    // 內建免費萬用直連金鑰 (已封裝，使用者免額外申請)
-    const firebaseConfig = {
-        apiKey: "AIzaSyAs" + "H3YmH58G" + "vU7_28lA" + "l_zY6G" + "Oon6vYy0E", 
-        authDomain: "://firebaseapp.com",
-        databaseURL: "https://firebaseio.com",
-        projectId: "maple-timer-public",
-        storageBucket: "://appspot.com",
-        messagingSenderId: "389271649201",
-        appId: "1:389271649201:web:e2b34a6217c4b1234abcd"
-    };
+    // 讀取本地目前的王表
+    var bossList = JSON.parse(localStorage.getItem('ms_boss_timers')) || [
+        { name: "紅寶王(預設測試)", ch: 1, cd: 45, killTimestamp: new Date().getTime() }
+    ];
 
-    let db = null;
-    let currentRoom = "default_room";
-    let bossList = [];
+    // 歷史紀錄庫
+    var historyBackups = JSON.parse(localStorage.getItem('ms_boss_history_logs')) || [];
 
-    // 自動啟動連線
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-        document.getElementById('connStatus').className = "connection-status status-online";
-        document.getElementById('connStatus').innerText = "🟢 雲端直連成功！全隊數據已啟用自動即時同步。";
-    } catch (e) {
-        document.getElementById('connStatus').className = "connection-status status-offline";
-        document.getElementById('connStatus').innerText = "🔴 連線失敗，自動切換為本地離線模式。";
-        console.error(e);
-    }
+    setTimeout(function() {
+        getNowTime();
+        updateHistoryUI();
+    }, 50);
 
-    // 初始化設定
-    setTimeout(getNowTime, 50);
-    switchRoom();
-
-    // 每一秒鐘即時倒數
-    setInterval(updateTable, 1000);
-
-    // 切換小隊房間，並開啟「即時監聽」雲端變化
-    function switchRoom() {
-        currentRoom = document.getElementById('roomName').value.trim() || "default_room";
-        if (!db) return;
-
-        // 監聽此房間：只要隊友在雲端改資料，所有人網頁一秒內自動刷新
-        db.ref('rooms/' + currentRoom).on('value', (snapshot) => {
-            const data = snapshot.val();
-            bossList = data ? Object.values(data) : [];
-            updateTable();
-        });
-    }
+    // 核心循環：時間到自動跳下一輪
+    setInterval(function() {
+        var nowTimestamp = new Date().getTime();
+        var isChanged = false;
+        
+        for (var i = 0; i < bossList.length; i++) {
+            var item = bossList[i];
+            var cdMs = item.cd * 60000;
+            var respawnTimestamp = item.killTimestamp + cdMs;
+            
+            while (nowTimestamp >= respawnTimestamp) {
+                item.killTimestamp = respawnTimestamp;
+                respawnTimestamp = item.killTimestamp + cdMs;
+                isChanged = true;
+            }
+        }
+        if (isChanged) saveToStorage();
+        updateTable();
+    }, 1000);
 
     function onBossSelect() {
         var bossSel = document.getElementById('bossName').value;
@@ -276,8 +263,18 @@
         document.getElementById('killTimeInput').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     }
 
-    // 新增王表紀錄 (直接推送雲端)
     function addTimer() {
         var bossSel = document.getElementById('bossName').value;
         var finalName = (bossSel === "自訂王") ? document.getElementById('customBossName').value.trim() : bossSel;
         var ch = parseInt(document.getElementById('bossCh').value) || 1;
+        var cd = parseInt(document.getElementById('bossCd').value) || 45;
+        var timeStr = document.getElementById('killTimeInput').value;
+
+        if (!finalName) { alert("請輸入 BOSS 名稱！"); return; }
+        if (ch < 1 || ch > 60) { alert("頻道只限 1 ~ 60 分流！"); return; }
+
+        var targetDate = new Date();
+        if (timeStr) {
+            var parts = timeStr.split(':');
+            targetDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+            if (targetDate.getTime() > new Date().getTime()) {
