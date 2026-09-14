@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍁 楓之谷 60頻道團隊共享計時器 (終極穩定歷史版)</title>
+    <title>🍁 楓之谷 60頻道團隊共享計時器</title>
     <style>
         :root {
             --primary: #ff9f43;
@@ -137,7 +137,7 @@
 <body>
 
 <div class="container">
-    <button type="button" class="btn-secondary" style="margin-bottom: 15px; background-color: #10ac84;" onclick="alert('🎉 網頁架構一切正常！按鈕全面復活！')">🔍 點我測試按鈕是否復活</button>
+    <button type="button" class="btn-secondary" style="margin-bottom: 15px; background-color: #10ac84;" onclick="alert('🎉 網頁架構與新增電路一切正常！按鈕全面復活！')">🔍 點我測試按鈕是否復活</button>
 
     <h1>🍁 楓之谷 60頻道團隊共享計時器</h1>
 
@@ -274,7 +274,6 @@
         if (ch < 1 || ch > 60) { alert("頻道只限 1 ~ 60 分流！"); return; }
 
         var targetDate = new Date();
-        if (timeStr) {
-            var parts = timeStr.split(':');
-            targetDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
-            if (targetDate.getTime() > new Date().getTime()) {
+        if (timeStr && timeStr.includes(':')) {
+            // 改用更安全的字串切碎法，絕對避免 [0] 和 [1] 被系統吃掉的問題
+            var hourPart = parseInt(timeStr.substring(0, timeStr.indexOf(':'))) || 0;
