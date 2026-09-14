@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+html<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍁 楓之谷 60頻道團隊共享計時器 (網址一鍵同步版)</title>
+    <title>🍁 紅寶王 45分無限循環計時器</title>
     <style>
         :root {
             --primary: #ff9f43;
@@ -21,23 +21,22 @@
             padding: 20px;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         h1 {
             text-align: center;
             color: var(--primary);
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
-            margin-bottom: 20px;
         }
         @media (min-width: 768px) {
-            .grid { grid-template-columns: 1fr 2fr; }
+            .grid { grid-template-columns: 1fr 1.5fr; }
         }
         .card {
             background-color: var(--bg-dark);
@@ -53,44 +52,32 @@
             padding-bottom: 10px;
             color: var(--text-light);
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #b2bec3;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            background-color: #2f3542;
-            border: 1px solid #57606f;
-            border-radius: 6px;
-            color: #ffffff;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-        .btn-group {
+        /* 頻道快速按鈕排版 */
+        .ch-btn-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 15px;
         }
-        button {
-            background-color: var(--primary);
+        .btn-ch {
+            background-color: #2f3542;
             color: white;
-            border: none;
-            padding: 12px 20px;
+            border: 1px solid #57606f;
+            padding: 12px 5px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.2s;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            transition: background 0.2s;
         }
-        button:hover { background-color: var(--primary-hover); }
-        button.btn-secondary { background-color: #576574; }
-        button.btn-danger { background-color: var(--danger); }
+        .btn-ch:hover {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        button {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -119,75 +106,81 @@
             font-weight: bold;
         }
         .btn-sm {
-            padding: 5px 10px;
+            padding: 6px 12px;
+            background-color: #576574;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
             font-size: 0.85rem;
             margin-right: 5px;
         }
+        .btn-sm:hover { background-color: #8395a7; }
+        .btn-danger-sm { background-color: var(--danger); }
+        .btn-danger-sm:hover { background-color: #ee5253; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 100% 絕對可點擊執行的測試按鈕 -->
-    <button type="button" id="testBtn" class="btn-secondary" style="width: 100%; margin-bottom: 15px; background-color: #10ac84;">🔍 點我測試網頁是否復活</button>
+    <!-- 保留原本 100% 暢通的綠色按鈕 -->
+    <button type="button" style="width: 100%; highway-height: 45px; margin-bottom: 15px; background-color: #10ac84; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold;" onclick="alert('🎉 測試成功！您的網頁功能通電完全正常！')">🔍 點我測試網頁是否復活</button>
 
-    <h1>🍁 楓之谷 60頻道團隊共享計時器 (網址一鍵同步版)</h1>
+    <h1>🍁 紅寶王 45分鐘無限自動循環計時器</h1>
 
     <div class="grid">
-        <!-- 左側操作區 -->
+        <!-- 左側：純按鈕觸發區（完全沒有任何輸入欄位） -->
         <div class="sidebar">
-            <div class="card form-group">
-                <h2>⚔️ 新增 / 更新擊殺紀錄</h2>
-                <div class="form-group">
-                    <label>BOSS 名稱</label>
-                    <select id="bossName">
-                        <option value="紅寶王">紅寶王 (固定45分)</option>
-                        <option value="蜈蚣王">蜈蚣王 (固定45分)</option>
-                        <option value="自訂王">自訂 BOSS...</option>
-                    </select>
+            <div class="card">
+                <h2>⚔️ 擊殺回報：請直接點選「王死的頻道」</h2>
+                <p style="font-size: 0.85rem; color: #b2bec3; margin: 0;">※ 滑鼠點擊下方對應的頻道，右側就會立刻啟動 45 分鐘無限循環倒數。</p>
+                
+                <div class="ch-btn-grid">
+                    <!-- 這裡做最常用的 1~20 頻快速直覺按鈕 -->
+                    <button class="btn-ch" onclick="clickCh(1)">1 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(2)">2 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(3)">3 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(4)">4 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(5)">5 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(6)">6 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(7)">7 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(8)">8 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(9)">9 頻道</button>
+                    <button class="btn-ch" onclick="clickCh(10)">10 頻</button>
+                    <button class="btn-ch" onclick="clickCh(11)">11 頻</button>
+                    <button class="btn-ch" onclick="clickCh(12)">12 頻</button>
+                    <button class="btn-ch" onclick="clickCh(13)">13 頻</button>
+                    <button class="btn-ch" onclick="clickCh(14) interviewee">14 頻</button>
+                    <button class="btn-ch" onclick="clickCh(15)">15 頻</button>
+                    <button class="btn-ch" onclick="clickCh(16)">16 頻</button>
+                    <button class="btn-ch" onclick="clickCh(17)">17 頻</button>
+                    <button class="btn-ch" onclick="clickCh(18)">18 頻</button>
+                    <button class="btn-ch" onclick="clickCh(19)">19 頻</button>
+                    <button class="btn-ch" onclick="clickCh(20)">20 頻</button>
                 </div>
-                <div class="form-group" id="customBossBlock" style="display: none;">
-                    <label>自訂 BOSS 名稱</label>
-                    <input type="text" id="customBossName" value="樹妖王">
-                </div>
-                <div class="form-group">
-                    <label>頻道 (1-60)</label>
-                    <input type="number" id="bossCh" value="1">
-                </div>
-                <div class="form-group">
-                    <label>CD 時間 (分鐘)</label>
-                    <input type="number" id="bossCd" value="45">
-                </div>
-                <button type="button" id="submitBtn" style="width: 100%; background-color: #ff9f43; margin-top: 15px;">➕ 擊殺王！立刻加入無限倒數王表</button>
-            </div>
 
-            <!-- 同步區 -->
-            <div class="card" style="margin-top: 20px;">
-                <h2>👥 團隊一鍵網址同步</h2>
-                <p style="font-size: 0.85rem; color: #b2bec3; margin: 0 0 10px 0;">※ 設定好時間後，按下方按鈕複製網址發給朋友，朋友點開直接秒同步！</p>
-                <div class="btn-group">
-                    <button type="button" id="exportBtn" style="background-color: #1dd1a1; color: #1e272e;">📋 一鍵複製「同步網址」發給隊友</button>
-                    <button type="button" id="clearBtn" class="btn-danger" style="margin-top: 10px; padding:8px; font-size:0.9rem;">⚠️ 清空所有紀錄</button>
+                <div style="margin-top: 25px; border-top: 1px solid #576574; padding-top: 15px;">
+                    <button type="button" style="width: 100%; background-color: #1dd1a1; color: #1e272e; border: none; padding: 12px; border-radius: 6px; font-weight: bold;" onclick="exportShareUrl()">📋 一鍵複製「團隊同步網址」發給隊友</button>
+                    <button type="button" style="width: 100%; background-color: var(--danger); color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; margin-top: 10px; font-size: 0.9rem;" onclick="clearAll()">⚠️ 清空重置所有頻道</button>
                 </div>
             </div>
         </div>
 
-        <!-- 右側王表區 -->
+        <!-- 右側：追王時間面板 -->
         <div class="main-content">
             <div class="card" style="height: 100%; overflow-x: auto;">
-                <h2>📅 目前追王時間面板 (時間到自動跳下一輪)</h2>
+                <h2>📅 紅寶王追蹤面板 (時間到自動跳下一輪)</h2>
                 <table>
                     <thead>
                         <tr>
-                            <th>BOSS 名稱</th>
+                            <th>BOSS</th>
                             <th>頻道</th>
-                            <th>重生週期</th>
-                            <th>剩餘倒數時間</th>
-                            <th>快速操作</th>
+                            <th>倒數計時 (45分循環)</th>
+                            <th>快速校正</th>
                         </tr>
                     </thead>
                     <tbody id="timerData">
-                        <!-- 由 JS 自動刷新 -->
+                        <!-- JS 自動刷新 -->
                     </tbody>
                 </table>
             </div>
@@ -196,110 +189,84 @@
 </div>
 
 <script>
+    // 核心資料陣列：存放各個頻道的剩餘秒數
     var bossList = [];
 
-    // 初始化頁面事件綁定（徹底隔離，100% 正常觸發）
-    window.addEventListener('DOMContentLoaded', function() {
-        checkUrlParams();
-        
-        if (bossList.length === 0) {
-            bossList.push({
-                name: "紅寶王(預設測試)",
-                ch: 1,
-                cd: 45,
-                secondsLeft: 2700
-            });
-        }
-        updateTable();
+    // 自動讀取網址帶過來的團隊數據
+    checkUrlParams();
 
-        document.getElementById('testBtn').onclick = function() {
-            alert('🎉 測試成功！您的網頁瀏覽器點擊功能一切正常！');
-        };
-        document.getElementById('submitBtn').onclick = addTimer;
-        document.getElementById('exportBtn').onclick = exportData;
-        document.getElementById('clearBtn').onclick = clearAll;
-        document.getElementById('bossName').onchange = onBossSelect;
-    });
-
-    // 每秒計時鐘
+    // 啟動定時器，純數字每秒扣 1 秒，時間到（<=0）自動無條件重新填裝 45 分鐘（2700秒）
     setInterval(function() {
         for (var i = 0; i < bossList.length; i++) {
             if (bossList[i].secondsLeft > 0) {
                 bossList[i].secondsLeft--;
             } else {
-                bossList[i].secondsLeft = bossList[i].cd * 60;
+                // 【無限自動循環】：秒數扣完，完全不需要人點，直接原地自動重算下一個 45 分鐘！
+                bossList[i].secondsLeft = 2700;
             }
         }
         updateTable();
     }, 1000);
 
-    function checkUrlParams() {
-        var urlParams = new URLSearchParams(window.location.search);
-        var dataParam = urlParams.get('data');
-        if (dataParam) {
-            try {
-                var decodedData = decodeURIComponent(atob(dataParam));
-                var parsed = JSON.parse(decodedData);
-                if (Array.isArray(parsed)) {
-                    bossList = parsed;
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            } catch (e) {
-                console.log("網址同步數據解析失敗");
-            }
-        }
-    }
+    // 一開啟網頁先繪製初始畫面
+    updateTable();
 
-    function onBossSelect() {
-        var bossSel = document.getElementById('bossName').value;
-        var cdInput = document.getElementById('bossCd');
-        var customBlock = document.getElementById('customBossBlock');
-        if (bossSel === '紅寶王' || bossSel === '蜈蚣王') {
-            cdInput.value = 45;
-            customBlock.style.display = 'none';
-        } else {
-            customBlock.style.display = 'block';
-        }
-    }
-
-    function addTimer() {
-        var bossSel = document.getElementById('bossName').value;
-        var finalName = bossSel === '自訂王' ? document.getElementById('customBossName').value.trim() : bossSel;
-        var chNum = parseInt(document.getElementById('bossCh').value, 10);
-        var cdNum = parseInt(document.getElementById('bossCd').value, 10);
-
-        if (!finalName || isNaN(chNum) || isNaN(cdNum)) {
-            alert('請檢查輸入欄位是否填寫正確！');
-            return;
-        }
-
+    // 1. 純按鈕點擊觸發（完全不需要讀取欄位，100% 避開瀏覽器權限封鎖）
+    function clickCh(channelNum) {
+        // 先檢查這個頻道是不是本來就在清單裡，有的話先刪除（避免重複堆疊）
         for (var i = bossList.length - 1; i >= 0; i--) {
-            if (bossList[i].name === finalName && bossList[i].ch === chNum) {
+            if (bossList[i].ch === channelNum) {
                 bossList.splice(i, 1);
             }
         }
 
+        // 直接把「紅寶王」、「頻道號碼」、以及「45分鐘的秒數(2700秒)」塞進去
         bossList.push({
-            name: finalName,
-            ch: chNum,
-            cd: cdNum,
-            secondsLeft: cdNum * 60
+            name: "紅寶王",
+            ch: channelNum,
+            secondsLeft: 2700
         });
 
         updateTable();
     }
 
-    // 2. 渲染表格（按鈕全部綁定「純數字索引」，地表相容性最高）
+    // 2. 渲染並繪製表格
     function updateTable() {
         var tbody = document.getElementById('timerData');
         if (!tbody) return;
 
         if (bossList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#8395a7;">目前暫無追王紀錄。</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#8395a7;">目前暫無計時頻道，請點擊左側按鈕開始。</td></tr>';
             return;
         }
 
+        // 依據剩餘時間少（快重生的王）自動置頂排序
         bossList.sort(function(a, b) {
             return a.secondsLeft - b.secondsLeft;
         });
 
+        var html = '';
+        for (var i = 0; i < bossList.length; i++) {
+            var item = bossList[i];
+            var countdownText = '';
+            var sClass = '';
+
+            var hrs = Math.floor(item.secondsLeft / 3600);
+            var mins = Math.floor((item.secondsLeft % 3600) / 60);
+            var secs = item.secondsLeft % 60;
+            
+            if (mins < 10) mins = "0" + mins;
+            if (secs < 10) secs = "0" + secs;
+            
+            countdownText = (hrs > 0 ? hrs + '小時 ' : '') + mins + '分' + secs + '秒';
+            if (item.secondsLeft < 300) sClass = 'status-imminent'; // 剩不到 5 分鐘變紅字
+
+            // 按鈕全部走最古老的 onclick，傳入純數字陣列索引，保證 100% 可點擊！
+            html += '<tr>' +
+                '<td><strong>' + item.name + '</strong></td>' +
+                '<td><span style="color:var(--primary)">' + item.ch + ' 頻</span></td>' +
+                '<td class="' + sClass + '">' + countdownText + '</td>' +
+                '<td>' +
+                    '<button class="btn-sm" onclick="quickAction(' + i + ', 1)">+1分</button>' +
+                    '<button class="btn-sm" onclick="quickAction(' + i + ', 2)">再殺一次</button>' +
+                    '<button class="btn-sm btn-sm btn-danger-sm" onclick="deleteI
