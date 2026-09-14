@@ -128,8 +128,8 @@
 <body>
 
 <div class="container">
-    <!-- 100% 絕不卡死、行內直接觸發的測試按鈕 -->
-    <button type="button" class="btn-secondary" style="width: 100%; margin-bottom: 15px; background-color: #10ac84;" onclick="alert('🎉 測試成功！您的網頁瀏覽器點擊功能一切正常！')">🔍 點我測試網頁是否復活</button>
+    <!-- 100% 絕對可點擊執行的測試按鈕 -->
+    <button type="button" id="testBtn" class="btn-secondary" style="width: 100%; margin-bottom: 15px; background-color: #10ac84;">🔍 點我測試網頁是否復活</button>
 
     <h1>🍁 楓之谷 60頻道團隊共享計時器 (網址一鍵同步版)</h1>
 
@@ -140,7 +140,7 @@
                 <h2>⚔️ 新增 / 更新擊殺紀錄</h2>
                 <div class="form-group">
                     <label>BOSS 名稱</label>
-                    <select id="bossName" onchange="onBossSelect()">
+                    <select id="bossName">
                         <option value="紅寶王">紅寶王 (固定45分)</option>
                         <option value="蜈蚣王">蜈蚣王 (固定45分)</option>
                         <option value="自訂王">自訂 BOSS...</option>
@@ -158,7 +158,7 @@
                     <label>CD 時間 (分鐘)</label>
                     <input type="number" id="bossCd" value="45">
                 </div>
-                <button type="button" style="width: 100%; background-color: #ff9f43; margin-top: 15px;" onclick="addTimer()">➕ 擊殺王！立刻加入無限倒數王表</button>
+                <button type="button" id="submitBtn" style="width: 100%; background-color: #ff9f43; margin-top: 15px;">➕ 擊殺王！立刻加入無限倒數王表</button>
             </div>
 
             <!-- 同步區 -->
@@ -166,8 +166,8 @@
                 <h2>👥 團隊一鍵網址同步</h2>
                 <p style="font-size: 0.85rem; color: #b2bec3; margin: 0 0 10px 0;">※ 設定好時間後，按下方按鈕複製網址發給朋友，朋友點開直接秒同步！</p>
                 <div class="btn-group">
-                    <button type="button" style="background-color: #1dd1a1; color: #1e272e;" onclick="exportShareUrl()">📋 一鍵複製「同步網址」發給隊友</button>
-                    <button type="button" class="btn-danger" style="margin-top: 10px; padding:8px; font-size:0.9rem;" onclick="clearAll()">⚠️ 清空所有紀錄</button>
+                    <button type="button" id="exportBtn" style="background-color: #1dd1a1; color: #1e272e;">📋 一鍵複製「同步網址」發給隊友</button>
+                    <button type="button" id="clearBtn" class="btn-danger" style="margin-top: 10px; padding:8px; font-size:0.9rem;">⚠️ 清空所有紀錄</button>
                 </div>
             </div>
         </div>
@@ -196,38 +196,42 @@
 </div>
 
 <script>
-    // 核心數據陣列：拋棄雜亂的時間物件，改用單純的「目標剩餘秒數」，保證 100% 絕不崩潰
     var bossList = [];
 
-    // 初始化自動檢查網址有沒有帶數據
-    checkUrlParams();
-    
-    // 如果網址沒有帶數據，預設塞一筆測試資料
-    if (bossList.length === 0) {
-        bossList.push({
-            name: "紅寶王(預設測試)",
-            ch: 1,
-            cd: 45,
-            secondsLeft: 2700
-        });
-    }
+    // 初始化頁面事件綁定（徹底隔離，100% 正常觸發）
+    window.addEventListener('DOMContentLoaded', function() {
+        checkUrlParams();
+        
+        if (bossList.length === 0) {
+            bossList.push({
+                name: "紅寶王(預設測試)",
+                ch: 1,
+                cd: 45,
+                secondsLeft: 2700
+            });
+        }
+        updateTable();
 
-    // 每秒核心時鐘（純數字倒數，時間到自動進入下一輪，地表最穩邏輯）
+        document.getElementById('testBtn').onclick = function() {
+            alert('🎉 測試成功！您的網頁瀏覽器點擊功能一切正常！');
+        };
+        document.getElementById('submitBtn').onclick = addTimer;
+        document.getElementById('exportBtn').onclick = exportData;
+        document.getElementById('clearBtn').onclick = clearAll;
+        document.getElementById('bossName').onchange = onBossSelect;
+    });
+
+    // 每秒計時鐘
     setInterval(function() {
         for (var i = 0; i < bossList.length; i++) {
             if (bossList[i].secondsLeft > 0) {
                 bossList[i].secondsLeft--;
             } else {
-                // 【核心重構：無條件自動進入下一輪】
-                // 秒數歸零的瞬間，不卡死，直接自動重新裝填 45 分鐘（CD * 60 秒）
                 bossList[i].secondsLeft = bossList[i].cd * 60;
             }
         }
         updateTable();
     }, 1000);
-
-    // 啟動時先畫出預設表格
-    updateTable();
 
     function checkUrlParams() {
         var urlParams = new URLSearchParams(window.location.search);
@@ -243,29 +247,6 @@
             } catch (e) {
                 console.log("網址同步數據解析失敗");
             }
-        }
-    }
-
-    function exportShareUrl() {
-        if (bossList.length === 0) {
-            alert("目前王表空空的，請先新增打王紀錄再複製喔！");
-            return;
-        }
-        try {
-            var jsonStr = JSON.stringify(bossList);
-            var b64Str = btoa(encodeURIComponent(jsonStr));
-            var shareUrl = window.location.origin + window.location.pathname + "?data=" + b64Str;
-            
-            var tempInput = document.createElement("input");
-            tempInput.value = shareUrl;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            
-            alert("📋 同步網址已成功複製！發到群組後，隊友點開就會「自動對時連動」！");
-        } catch (e) {
-            alert("複製失敗，請直接手動複製網址。");
         }
     }
 
@@ -288,14 +269,37 @@
         var cdNum = parseInt(document.getElementById('bossCd').value, 10);
 
         if (!finalName || isNaN(chNum) || isNaN(cdNum)) {
-            alert('請檢查輸入欄位是否正確！');
+            alert('請檢查輸入欄位是否填寫正確！');
             return;
         }
 
-        // 同步覆蓋檢查
         for (var i = bossList.length - 1; i >= 0; i--) {
             if (bossList[i].name === finalName && bossList[i].ch === chNum) {
                 bossList.splice(i, 1);
             }
         }
+
+        bossList.push({
+            name: finalName,
+            ch: chNum,
+            cd: cdNum,
+            secondsLeft: cdNum * 60
+        });
+
+        updateTable();
+    }
+
+    // 2. 渲染表格（按鈕全部綁定「純數字索引」，地表相容性最高）
+    function updateTable() {
+        var tbody = document.getElementById('timerData');
+        if (!tbody) return;
+
+        if (bossList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#8395a7;">目前暫無追王紀錄。</td></tr>';
+            return;
+        }
+
+        bossList.sort(function(a, b) {
+            return a.secondsLeft - b.secondsLeft;
+        });
 
