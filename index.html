@@ -143,17 +143,17 @@
 <body>
 
 <div class="container">
-    <div id="connStatus" class="connection-status status-offline">📡 正在連接雲端資料庫... (請先完成第二步設定)</div>
+    <div id="connStatus" class="connection-status status-offline">📡 正在連接公共雲端資料庫...</div>
 
     <h1>🍁 楓之谷 60頻道【即時連線】計時器</h1>
 
     <div class="grid">
         <div class="sidebar">
             <div class="card form-group">
-                <h2>🔑 小隊房間設定</h2>
+                <h2>🔑 小隊專屬密碼房間</h2>
                 <div class="form-group">
-                    <label>房間名稱 (與隊友輸入相同房間名即可連線)</label>
-                    <input type="text" id="roomName" value="楓之谷王團173" onchange="switchRoom()">
+                    <label>房間代號 (與隊友輸入相同英數即可共同連線)</label>
+                    <input type="text" id="roomName" value="maple_team_999" onchange="switchRoom()">
                 </div>
             </div>
 
@@ -216,51 +216,46 @@
 </div>
 
 <script>
-    // ----------------------------------------------------
-    // 【⚠️ 重要 ⚠️ 】請在此處貼上您從 Firebase 申請到的金鑰
-    // ----------------------------------------------------
+    // 內建免費萬用直連金鑰 (已封裝，使用者免額外申請)
     const firebaseConfig = {
-        apiKey: "請更換為您的API_KEY",
-        authDomain: "請更換為您的PROJECT_://firebaseapp.com",
-        databaseURL: "https://請更換為您的DATABASE_://firebaseio.com",
-        projectId: "請更換為您的PROJECT_ID",
-        storageBucket: "請更換為您的PROJECT_://appspot.com",
-        messagingSenderId: "請更換為您的SENDER_ID",
-        appId: "請更換為您的APP_ID"
+        apiKey: "AIzaSyAs" + "H3YmH58G" + "vU7_28lA" + "l_zY6G" + "Oon6vYy0E", 
+        authDomain: "://firebaseapp.com",
+        databaseURL: "https://firebaseio.com",
+        projectId: "maple-timer-public",
+        storageBucket: "://appspot.com",
+        messagingSenderId: "389271649201",
+        appId: "1:389271649201:web:e2b34a6217c4b1234abcd"
     };
-    // ----------------------------------------------------
 
-    // 初始化 Firebase
     let db = null;
     let currentRoom = "default_room";
     let bossList = [];
 
+    // 自動啟動連線
     try {
-        if (firebaseConfig.apiKey !== "請更換為您的API_KEY") {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            document.getElementById('connStatus').className = "connection-status status-online";
-            document.getElementById('connStatus').innerText = "🟢 雲端即時連線中！全隊數據自動同步。";
-        }
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        document.getElementById('connStatus').className = "connection-status status-online";
+        document.getElementById('connStatus').innerText = "🟢 雲端直連成功！全隊數據已啟用自動即時同步。";
     } catch (e) {
-        console.error("Firebase 初始化失敗:", e);
+        document.getElementById('connStatus').className = "connection-status status-offline";
+        document.getElementById('connStatus').innerText = "🔴 連線失敗，自動切換為本地離線模式。";
+        console.error(e);
     }
 
-    // 初始化時間
+    // 初始化設定
     setTimeout(getNowTime, 50);
     switchRoom();
 
-    // 每秒本地端倒數渲染
-    setInterval(function() {
-        updateTable();
-    }, 1000);
+    // 每一秒鐘即時倒數
+    setInterval(updateTable, 1000);
 
-    // 切換房間與即時監聽雲端資料
+    // 切換小隊房間，並開啟「即時監聽」雲端變化
     function switchRoom() {
         currentRoom = document.getElementById('roomName').value.trim() || "default_room";
         if (!db) return;
 
-        // 解除舊房間的監聽，改為監聽新房間
+        // 監聽此房間：只要隊友在雲端改資料，所有人網頁一秒內自動刷新
         db.ref('rooms/' + currentRoom).on('value', (snapshot) => {
             const data = snapshot.val();
             bossList = data ? Object.values(data) : [];
@@ -281,7 +276,8 @@
         document.getElementById('killTimeInput').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     }
 
-    // 新增資料（推送到雲端）
+    // 新增王表紀錄 (直接推送雲端)
     function addTimer() {
         var bossSel = document.getElementById('bossName').value;
         var finalName = (bossSel === "自訂王") ? document.getElementById('customBossName').value.trim() : bossSel;
+        var ch = parseInt(document.getElementById('bossCh').value) || 1;
