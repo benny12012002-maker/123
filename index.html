@@ -134,7 +134,7 @@
 <body>
 
 <div class="container">
-    <button type="button" class="btn-secondary" style="width: 100%; margin-bottom: 15px; background-color: #10ac84;" onclick="alert('🎉 測試成功！一鍵同步功能已順利通電！')">🔍 點我測試按鈕是否正常</button>
+    <button type="button" id="testBtn" class="btn-secondary" style="width: 100%; margin-bottom: 15px; background-color: #10ac84;">🔍 點我測試按鈕是否正常</button>
 
     <h1>🍁 楓之谷 60頻道團隊共享計時器 (網址一鍵同步版)</h1>
 
@@ -145,7 +145,7 @@
                 <h2>⚔️ 新增 / 更新擊殺紀錄</h2>
                 <div class="form-group">
                     <label>BOSS 名稱</label>
-                    <select id="bossName" onchange="onBossSelect()">
+                    <select id="bossName">
                         <option value="紅寶王">紅寶王 (固定45分)</option>
                         <option value="蜈蚣王">蜈蚣王 (固定45分)</option>
                         <option value="自訂王">自訂 BOSS...</option>
@@ -165,13 +165,13 @@
                 </div>
                 <div class="form-group">
                     <label>⏱️ 擊殺時間點調整 (回報過去擊殺)</label>
-                    <button type="button" style="width:100%; margin-bottom:8px;" onclick="getNowTime()">⚡ 就是現在 (帶入當下電腦時間)</button>
+                    <button type="button" id="nowTimeBtn" style="width:100%; margin-bottom:8px;">⚡ 就是現在 (帶入當下電腦時間)</button>
                     <div class="time-adjust-panel">
                         <label style="font-size:0.85rem;">手動指定時間 (時:分)：</label>
                         <input type="time" id="killTimeInput">
                     </div>
                 </div>
-                <button type="button" style="width: 100%; background-color: #ff9f43;" onclick="addTimer()">➕ 紀錄 / 加入無限倒數王表</button>
+                <button type="button" id="addTimerBtn" style="width: 100%; background-color: #ff9f43;">➕ 紀錄 / 加入無限倒數王表</button>
             </div>
 
             <!-- 同步區 -->
@@ -179,8 +179,8 @@
                 <h2>👥 團隊一鍵網址同步</h2>
                 <p style="font-size: 0.85rem; color: #b2bec3; margin: 0 0 10px 0;">※ 設定好時間後，按下方按鈕複製網址發給朋友，朋友點開直接秒同步！</p>
                 <div class="btn-group">
-                    <button type="button" style="background-color: #1dd1a1; color: #1e272e;" onclick="exportShareUrl()">📋 一鍵複製「同步網址」發給隊友</button>
-                    <button type="button" class="btn-danger" style="margin-top: 10px; padding:8px; font-size:0.9rem;" onclick="clearAll()">⚠️ 清空所有紀錄</button>
+                    <button type="button" id="copyShareBtn" style="background-color: #1dd1a1; color: #1e272e;">📋 一鍵複製「同步網址」發給隊友</button>
+                    <button type="button" id="clearAllBtn" class="btn-danger" style="margin-top: 10px; padding:8px; font-size:0.9rem;">⚠️ 清空所有紀錄</button>
                 </div>
             </div>
         </div>
@@ -212,12 +212,12 @@
 <script>
     var bossList = [];
 
-    // 初始化自動檢查網址有沒有帶數據，並填入當前時間
-    window.onload = function() {
+    // 當網頁載入時啟動
+    document.addEventListener("DOMContentLoaded", function() {
         getNowTime();
         checkUrlParams();
         
-        // 如果網址沒有帶數據，預設塞一筆測試資料
+        // 預設塞入一筆測試資料
         if (bossList.length === 0) {
             bossList.push({
                 name: "紅寶王(預設測試)",
@@ -227,9 +227,19 @@
             });
         }
         updateTable();
-    };
 
-    // 每秒核心計時鐘（無限自動循環演算法）
+        // 綁定事件監聽器（排除古老 onclick 機制，100% 穩定）
+        document.getElementById('testBtn').addEventListener('click', function() {
+            alert('🎉 測試成功！所有按鈕功能已完全修復通電！');
+        });
+        document.getElementById('nowTimeBtn').addEventListener('click', getNowTime);
+        document.getElementById('addTimerBtn').addEventListener('click', addTimer);
+        document.getElementById('copyShareBtn').addEventListener('click', exportShareUrl);
+        document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+        document.getElementById('bossName').addEventListener('change', onBossSelect);
+    });
+
+    // 每秒計時鐘（無限循環核心）
     setInterval(function() {
         var nowTimestamp = new Date().getTime();
         for (var i = 0; i < bossList.length; i++) {
@@ -245,51 +255,35 @@
         updateTable();
     }, 1000);
 
-    // 檢查網址列參數（一鍵匯入的核心技術）
     function checkUrlParams() {
         var urlParams = new URLSearchParams(window.location.search);
         var dataParam = urlParams.get('data');
         if (dataParam) {
             try {
-                // 解碼並解析 JSON 數據
                 var decodedData = decodeURIComponent(atob(dataParam));
                 var parsed = JSON.parse(decodedData);
                 if (Array.isArray(parsed)) {
                     bossList = parsed;
-                    // 清除網址列的髒參數，維持畫面乾淨
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
             } catch (e) {
-                console.log("網址無同步數據或解析失敗");
+                console.log("網址同步數據解析失敗");
             }
         }
     }
 
-    // 產生並複製帶有資料的同步網址
     function exportShareUrl() {
         if (bossList.length === 0) {
-            alert("目前王表空空的，請先新增打王紀錄再複製喔！");
+            alert("目前王表是空的，請先新增打王紀錄再複製喔！");
             return;
         }
         try {
-            // 將王表轉為純文字並用 Base64 加密塞進網址
             var jsonStr = JSON.stringify(bossList);
             var b64Str = btoa(encodeURIComponent(jsonStr));
             var shareUrl = window.location.origin + window.location.pathname + "?data=" + b64Str;
             
-            // 建立一個臨時輸入框來強制作業系統複製
             var tempInput = document.createElement("input");
             tempInput.value = shareUrl;
             document.body.appendChild(tempInput);
             tempInput.select();
             document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            
-            alert("📋 同步網址已成功複製！快發到 LINE 或 Discord 群組，隊友點開就直接秒對時！");
-        } catch (e) {
-            alert("複製失敗，請手動複製網址列。");
-        }
-    }
-
-    function onBossSelect() {
-        var bossSel = document.getElementById('bossName').value;
